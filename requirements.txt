@@ -1,11 +1,12 @@
 scipy
 numba
 numpy
+pandas
+bokeh
 panel
 param
-pandas
-hvplot.pandas
+hvplot
 holoviews
-bokeh
 jupyter
+nbconvert
 cmocean
