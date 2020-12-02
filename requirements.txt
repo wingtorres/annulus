@@ -7,5 +7,6 @@ param
 bokeh
 hvplot
 holoviews
+jupyter notebook
 
 
