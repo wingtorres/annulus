@@ -8,5 +8,6 @@ bokeh
 hvplot
 holoviews
 jupyter
+cmocean
 
 
