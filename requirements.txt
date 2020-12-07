@@ -11,3 +11,4 @@ matplotlib
 jupyter
 nbconvert
 cmocean
+sympy
