@@ -12,3 +12,4 @@ jupyter
 nbconvert
 cmocean
 sympy
+dill
