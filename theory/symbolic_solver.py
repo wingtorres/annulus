@@ -18,9 +18,11 @@ def analytic_solution():
 	coeffs = solve(ics,[C1,C2,C3])
 
 	sol = sol_par.subs(coeffs)
-	sol_exa = sol.simplify()
-	sol_exa_disp = powsimp(sol, deep = True, force = False, combine = 'exp')
-	return  latex(expr), latex(sol_par), latex(sol_exa_disp), sol_exa
+	sol_eva = sol.simplify()
+	sol_exa = powsimp(sol, deep = True, force = False, combine = 'exp')
+	#return  latex(expr), latex(sol_par), latex(sol_exa_disp), sol_exa
+	return  expr, sol_par, sol_exa, sol_eva
+
 
 def analytic_function(sol,radius,coriolis,speed,slope,drag = 0):
 	return	lambdify(s, sol.rhs.subs(R,radius).subs(f,coriolis).subs(U,speed).subs(B,slope).subs(C,drag),'numpy')
