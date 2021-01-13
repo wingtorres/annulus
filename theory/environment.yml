@@ -5,6 +5,7 @@ dependencies:
   - scipy
   - numba
   - xarray
+  - netcdf4
   - pandas
   - bokeh
   - panel
