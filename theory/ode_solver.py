@@ -12,36 +12,47 @@ def orient(theta,alpha):
     return angle
 
 #https://stackoverflow.com/questions/25829364/applying-a-decorator-to-an-imported-function
-nonlinear_topo = njit(pcc.nonlinear_topo)
-nonlinear_spr = njit(pcc.nonlinear_spr)
-coriolis_topo = njit(pcc.coriolis_topo)
-coriolis_spr = njit(pcc.coriolis_spr)
-slope_torque = njit(pcc.slope_torque)
-dissipation = njit(pcc.dissipation) 
+# nonlinear_topo = njit(pcc.nonlinear_topo)
+# nonlinear_spr = njit(pcc.nonlinear_spr)
+# coriolis_topo = njit(pcc.coriolis_topo)
+# coriolis_spr = njit(pcc.coriolis_spr)
+# slope_torque = njit(pcc.slope_torque)
+# dissipation = njit(pcc.dissipation) 
 
-# @njit
-# def spreading(k,dadn):
-#     return k*dadn
+@njit
+def spreading(k,dadn):
+    return k*dadn
 
-# @njit
-# def nonlinear(h,dhds,k):
-#     """computation of nonlinear term"""
-#     return dhds*2*k/h
+@njit
+def nonlinear_topo(h,dhds,k):
+    """computation of nonlinear term"""
+    return dhds*2*k/h
 
-# @njit
-# def coriolis(h,dhds,f,u):
-#     """computation of coriolis term"""
-#     return dhds*f/(u*h)
+@njit
+def coriolis_topo(h,dhds,f,u):
+    """computation of coriolis term"""
+    return dhds*f/(u*h)
 
-# @njit
-# def slope_torque(Cd,dhdn,h):
-#     """computation of slope torque term"""
-#     return -Cd*dhdn/(h*h)
+@njit
+def nonlinear_spr(dadn,k):
+    """computation of nonlinear term"""
+    return 2*k*dadn
 
-# @njit
-# def dissipation(Cd,k,h):
-#     """computation of dissipation term"""
-#     return -Cd*k/h
+@njit
+def coriolis_spr(dadn,f,u):
+    """computation of coriolis term"""
+    return dadn*f/u
+
+
+@njit
+def slope_torque(Cd,dhdn,h):
+    """computation of slope torque term"""
+    return -Cd*dhdn/(h*h)
+
+@njit
+def dissipation(Cd,k,h):
+    """computation of dissipation term"""
+    return -Cd*k/h
 
 @njit
 def curvature_evolution(s, Y, 𝛽 = 0.01, f = -1e-4, Cd = 2.5e-3, ri = 12e3, dadn = 0): 
