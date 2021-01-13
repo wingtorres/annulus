@@ -1,0 +1,19 @@
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - scipy
+  - numba
+  - xarray
+  - pandas
+  - bokeh
+  - panel
+  - param
+  - hvplot
+  - holoviews
+  - jupyter
+  - nbconvert
+  - sympy
+  - numpy
+  - dill
+  - cmocean
