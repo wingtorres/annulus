@@ -1,0 +1,17 @@
+scipy
+numba
+numpy
+pandas
+bokeh
+panel
+param
+hvplot
+holoviews
+matplotlib
+jupyter
+ipython
+nbconvert
+cmocean
+sympy
+dill
+xarray
