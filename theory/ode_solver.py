@@ -2,7 +2,7 @@ from numba import jit, njit
 import numpy as np
 import pandas as pd
 import xarray as xr
-import pycoawst.tools.circulation as pcc
+#import pycoawst.tools.circulation as pcc
 
 @njit
 def orient(theta,alpha):
