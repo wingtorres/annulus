@@ -7,7 +7,6 @@ panel
 param
 hvplot
 holoviews
-datashader
 matplotlib
 jupyter
 ipython
@@ -16,4 +15,4 @@ cmocean
 sympy
 dill
 xarray
-netcdf4
+pscript
