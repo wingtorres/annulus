@@ -13,3 +13,4 @@ nbconvert
 cmocean
 sympy
 dill
+xarray
