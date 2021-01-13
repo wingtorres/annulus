@@ -20,9 +20,6 @@ hv.extension('bokeh')
 home = os.environ["HOME"]
 rc("text", usetex=False)
 
-from dask.distributed import Client
-Client()
-
 class witParticle(JITParticle):
     alphabar = Variable('alphabar', dtype=np.float32, initial=0.)
     k = Variable('k', dtype=np.float32, initial=0.)
@@ -49,7 +46,6 @@ class witParticle(JITParticle):
     
     curv_adv_stretch = Variable("curv_adv_stretch", dtype = np.float32, initial = 0)
     curv_adv_divshear = Variable("curv_adv_divshear", dtype = np.float32, initial = 0)
-    
     
 def Sample(particle, fieldset, time):
     particle.alphabar = fieldset.alphabar[time, particle.depth, particle.lat, particle.lon]
@@ -147,9 +143,13 @@ def domain(ds):
     return hv.Curve(coords).opts(color = "k", line_width = 1)
 
 def create_figures(df, dm):    
-    ps = df.hvplot.points(x = "lon", y = "lat", s = 1, color = "r")
-    pc = dm.V.hvplot.quadmesh("x_psi", "y_psi", cmap = cmocean.cm.gray_r, rasterize = True, colorbar =  False, clim = (0,.1)).opts(aspect = "equal")
-    fig_xy = pc*ps*domain(dm)
+    #ps = df.hvplot.points(x = "lon", y = "lat", s = 1, color = "r")
+    #pc = dm.V.hvplot.quadmesh("x_psi", "y_psi", cmap = cmocean.cm.gray_r, rasterize = True, colorbar =  False, clim = (0,.1)).opts(aspect = "equal")
+    #fig_xy = pc*ps*domain(dm)
+
+    plot_vrt =  df.hvplot.line(x = "s", y = ["vk","dvdn"],  color = ["orange","purple"]).opts(title = "Vorticity")#*hv.Hline(0).opts(line_width = 1, color = "k", alpha = .25) 
+
+    plot_div =  df.hvplot.line(x = "s", y = ["div_topo","div_rotary"],  color = ["b","r"], group_label = " ").opts(title = "Divergence") 
 
     plot_dia = ( df.hvplot.line(x = "s", y = ["dkds","dkds_dia"],line_dash = ["solid","dashed"], color = ["k","k"], line_alpha = [1,1])*\
                  df.hvplot.line(x = "s", y = curv_terms, ylim = (-2e-6, 2e-6))).opts(title = "Curvature Evolution") 
@@ -183,5 +183,5 @@ def create_figures(df, dm):
     # +
     # df.hvplot.line(x = "s", y = "alphabar") #, label = "depth")
     # ).opts(width = 528, shared_axes=False).cols(2)
-    return fig_xy, plot_dia, plot_hadv, plot_drag
+    return plot_dia, plot_hadv, plot_drag, plot_div, plot_vrt
 
