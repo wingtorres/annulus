@@ -9,6 +9,7 @@ hvplot
 holoviews
 matplotlib
 jupyter
+ipython
 nbconvert
 cmocean
 sympy
