@@ -7,6 +7,7 @@ panel
 param
 hvplot
 holoviews
+datashader
 matplotlib
 jupyter
 ipython
