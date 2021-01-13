@@ -15,4 +15,5 @@ cmocean
 sympy
 dill
 xarray
+netcdf4
 pscript
