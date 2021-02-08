@@ -21,6 +21,9 @@ from operator import attrgetter
 #todo:
 #-stop integration after certain distance traveled
 
+
+dm = xr.load_dataset(sys.argv[1], decode_times = False, use_cftime = True)
+
 class witParticle(JITParticle):
     s = Variable('s', dtype = np.float32, initial=0.)
     lon_lag = Variable("lon_lag", dtype = np.float32, to_write = False, initial = attrgetter("lon"))
@@ -92,3 +95,4 @@ F = minimize(find_trajectory, 0, args=dm, method = "SLSQP", tol = None, options 
 #F = differential_evolution(find_trajectory, args=(dm,12.05e3),  disp = True, bounds = [ (-np.pi/192, np.pi/192) , workers = -1)
 
 print(F)
+
