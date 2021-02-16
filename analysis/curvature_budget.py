@@ -171,14 +171,6 @@ def make_dataset(dp):
     #dp["curv_drag_compute"] = (dp.curv_drag_sltq + dp.curv_drag_sptq + dp.curv_drag_diss)
     return dp
 
-def domain(ds):
-    x = ds.x_psi.values
-    y = ds.y_psi.values
-    xo = np.concatenate([x[0,:-1], x[:-1,-1], x[-1,::-1], x[-2:0:-1,0]])
-    yo = np.concatenate([y[0,:-1], y[:-1,-1], y[-1,::-1], y[-2:0:-1,0]])
-    coords = np.vstack((xo,yo)).T
-    return hv.Curve(coords).opts(color = "k", line_width = 1)
-
 def create_figures(df, dm):    
     #ps = df.hvplot.points(x = "lon", y = "lat", s = 1, color = "r")
     #pc = dm.V.hvplot.quadmesh("x_psi", "y_psi", cmap = cmocean.cm.gray_r, rasterize = True, colorbar =  False, clim = (0,.1)).opts(aspect = "equal")
