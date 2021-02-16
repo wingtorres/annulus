@@ -5,7 +5,7 @@ import os
 import sys
 import math
 import numpy as np
-from scipy.optimize import minimize, differential_evolution
+from scipy.optimize import minimize, minimize_scalar, differential_evolution
 import xarray as xr
 
 from parcels import AdvectionRK4, AdvectionRK45, ErrorCode, Variable, Field, FieldSet, JITParticle, ParticleFile, ParticleSet
@@ -74,7 +74,8 @@ t0 = pset.particle_data["time"]
 
 def find_trajectory(x, ds, r = 12.05e3):
     """Find trajectory that minimizes path integral of the given variable"""
-    phi = x[0]
+    #phi = x[0]
+    phi = x #for minimize_scalar
     x0, y0 = r*np.cos(phi), r*np.sin(phi)
 
     pset.particle_data["time"] = t0
@@ -91,7 +92,8 @@ def find_trajectory(x, ds, r = 12.05e3):
     return objective
 
 options={"disp": True}#, "ftol": 1e-6}#, "eps": np.pi/19200}
-F = minimize(find_trajectory, 0, args=dm, method = "SLSQP", tol = None, options = options, bounds = [ (-np.pi/192, np.pi/192) ] )
+F = minimize_scalar(find_trajectory, 0, args=dm, method = "bounded", tol = None, options = options, bounds = (-np.pi/192, np.pi/192) )
+#F = minimize(find_trajectory, 0, args=dm, method = "SLSQP", tol = None, options = options, bounds = [ (-np.pi/192, np.pi/192) ] )
 #F = differential_evolution(find_trajectory, args=(dm,12.05e3),  disp = True, bounds = [ (-np.pi/192, np.pi/192) , workers = -1)
 
 print(F)
