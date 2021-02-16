@@ -77,7 +77,7 @@ def curvature_evolution(s, Y, 𝛽 = 0.01, f = -1e-4, Cd = 2.5e-3, ri = 12e3, da
             slope_torque(Cd,dhdn,h) + 
             dissipation(Cd,k,h) 
             # + (2*k*u + f)*stokes_divergence(h, dhds)/u**2
-            )
+            )/5
 
     return [k, drds, (1/r)*drdn, dhds, -u*dhds/h, dkds]
 
