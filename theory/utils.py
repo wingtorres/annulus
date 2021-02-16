@@ -10,6 +10,9 @@ navbar = """
 
 navpane = pn.pane.Markdown(navbar)
 
+def m2km(value):
+    return f"{abs(value)/1e3:d} km"
+
 def border(ds):
     x = ds.x_psi.values
     y = ds.y_psi.values
