@@ -1,33 +1,43 @@
-# Curvature Dynamics of a Barotropic Coastal Outflow
+# Curvature Dynamics of a Coastal Barotropic Jet on a Slope
 
+## Abstract
 
-## Introduction
-- Background on different classes of coastal outflows (jets/plumes, barotropic/stratified, wide/narrow)
-- Highlight lack of focus on narrow (large Ro) barotropic outflows and relevance to coral reefs
- 
-- Outline
+## 1.0 Introduction
+
+- **Outflow onto a slope is a common geophysical phenomenon encompassing a variety of flows including rivers/streams, engineering discharges, tidal jets, rip currents, and wave-driven flows on reefs** (Horner-Devine et al. 2015, Jirka & Donekeer 1991, Wolanski et al. 1988, Symonds et al. 1995). These circulation patterns are characterized by the presence of a steep gradient in water properties such as momentum and density relative to the ambient fluid, and generally play a key role in the transport of scalars in the coastal ocean. As the scale of these features
+
+Another feature of these flows is that the governing dynamics tend to change along their course, typically understood as a transition nearfield to farfield dynamics as the length/time scales develop. The nearfield tends to be inertia-dominated, while the farfield tends to be rotationally-dominated; often the circulation pattern evolves into geostrophic balance as an alongshore coastal current. The mechanics of this transition are often complicated by the overlapping effects of buoyancy, bathymetry, alongshore currents, tides, winds, and mixing.
+
+- **This study focuses on developing theory regarding the trajectory of consecutive small-intermediate scale barotropic jets in shallow water, recognizing the considerable emphasis that has been placed on large-scale single outflows, especially those subject to stratification, such as river plumes**. Weakly stratified small-scale features such as tidal jets and reef pass jets are physically and ecologically important, but have not often been approached from a geophysical perspective as sometimes the physical scaling arguments do not justify accounting for the Coriolis acceleration (Wolanski et al. 1988 CSR, Herdman et al. 2016 JGR). Here, however, we identify realistic conditions for which rotation may play a non-trivial role in the behavior of outflow jets at scales far smaller than the Rossby radius of deformation. These features tend to be geophysically "thin" - the jet width is much smaller than the radius of curvature and the inertial radius, and so we justify taking inspiration from select larger-scale GFD studies in order to explain small-scale dynamics. Interestingly, these conditions lie within the scale gap between geophysical and engineering literature as identified by Basdurak 2020 JGR - the former generally considering wide aspect $\mathcal{O}(0.001-0.01)$ rotationally-dominated outflows and the latter generally considering narrow aspect $\mathcal{O}(0.1-1)$ inertia-dominated outflows. Based on scaling arguments and in the abscence of stratification we characterize these features using the Rossby number and equivalent Reynold's number which depend on the bottom friction, rotation, and nonlinear advection forces. 
+
+- **Foundational work on the path of free jets (not necessarily outflows) by Warren 1963, interested in Gulf Stream meanders, demonstrated how the application of the barotropic vorticity equation could be used to derive a path equation for the trajectory of a free jet in the presence of topography**. This was later extended to arbitrary topography by Cushman-Roisin 1997 who also characterized new behaviors such as jet trapping, retroflection, and deflection. Key to their efforts was solving for curvature in the vorticity equation, which arises when cast in streamwise normal coordinates. Woods & Beardsley 1988 CSR numerically simulated a 2D barotropic outflow onto a linear slope (the subject at hand here) and identified how nonlinear topographic stretching results in nearfield acquisition of cyclonic vorticity, first deflecting the jet opposite to its inertial tendency. Eventually bottom friction damps this nonlinearity and the jet develops into a downcoast current, but the relevant contribution of the work was to the importance of nonlinear vorticity dynamics in the nearfield. In this manuscript we synthesize these approaches to the problem, using curvature via the vorticity equation to understand the dynamics of 2D barotropic flow on a slope.
+- Research Questions
+    - How do slope/bottom friction/Coriolis effect
+interact to influence the trajectory of coastal outflows?
+    - Can vorticity/curvature dynamics explain the evolution of the jet developing over topography?
+    - Under what conditions, if it all, can the jet behavior be captured by a 1D reduced physics model?
+    
+- **Here, we investigate the behavior of a barotropic coastal jet outflow by deriving a novel equation for its curvature then using it to examine an array of numerical simulations, comparing the results against 1D analytic predictions**. 
     - Theory (Section 2): Summarize existing work on vorticity equation and natural coordinates. Derive general curvature evolution equation and 1D simplification
     - Experimental design (Section 3): Describe numerical model experiments covering model configuration and parameter space
-    - Results (Section 4): Detailed discussion of illustrative single run followed by summary findings across parameter space to identify regimes/trends. Validity of 1D simplificaiton assessed
+    - Results (Section 4): 
+        - Detailed description of illustrative single run 
+    - Summary (Section 5) findings across parameter space to identify regimes/trends. Validity of 1D simplification assessed
+
+
+    
 
 
 ## Theory
  
-![Figure 1](https://journals.ametsoc.org/view/journals/phoc/47/5/full-jpo-d-16-0239.1-f1.jpg)
-I like this diagram from Wenegrat + Thomas 2017 JPO Fig. 1. I propose we ask to reuse it with modification to accommodate our choice of variables, and perhaps add $\vec{u},\vec{v}$ vectors too?
-
-$\hat{s} = \frac{\vec{u}}{V}$
-$\hat{n} = k \times \hat{k}$
-$\alpha = \tan^{-1}\frac{\vec{v}}{\vec{u}}$
-$\frac{\partial \alpha}{\partial s} = K$
-$\nabla \cdot \vec{u} = \frac{\partial V}{\partial s} + V\frac{\partial \alpha}{\partial n}$
-$\nabla \times \vec{u} = -\frac{\partial V}{\partial n} + VK$
-
-
 ### Governing Equations
 
 The depth-integrated 2D shallow water system
 in a streamwise normal coordinate system $(s,n)$
+
+![Figure 1](https://journals.ametsoc.org/view/journals/phoc/47/5/full-jpo-d-16-0239.1-f1.jpg)
+I like this diagram from Wenegrat + Thomas 2017 JPO Fig. 1. I propose we ask to reuse it with modification to accommodate our choice of variables, and perhaps add $\vec{u},\vec{v}$ vectors too?
+
 
 
 #### Continuity
@@ -66,7 +76,6 @@ $$
 \frac{C_d V \omega}{H} = 0 
 $$
 
-
 Substituting the definition of vorticity and divergence in (<i>s,n</i>) coordinates, assuming steady flow, and dividing by $V^2$ produces the curvature equation...
 
 $$
@@ -88,24 +97,56 @@ $$ \frac{1}{V}\frac{\partial V}{\partial s} = -\frac{1}{H}\frac{\partial H}{\par
 which upon substitution gives
 
 $$
-\frac{\partial k}{\partial s} =
-\underbrace{ \frac{\partial}{\partial s}\frac{\partial V}{\partial n} }_{\text{shear divergence}} + 
-\underbrace{ k\frac{\partial \alpha}{\partial n} }_{\text{curvature divarication}} -
+\underbrace{\frac{\partial K}{\partial s}}_{\text{curvature gradient}} =
+\underbrace{ \frac{1}{V}\frac{\partial}{\partial s}\frac{\partial V}{\partial n} }_{\text{shear divergence}} + 
+\underbrace{ K\frac{\partial \alpha}{\partial n} }_{\text{confluence veering}} -
 \underbrace{ \frac{1}{V}\frac{\partial f}{\partial s} }_{\text{Beta effect}} +
-\underbrace{ \frac{( -\frac{\partial V}{\partial n} + 2VK  + f)}{V}\bigg[ \frac{1}{H} \frac{\partial H}{\partial s}  \bigg] }_{\text{nonlinear stretching}} -
-\underbrace{ \frac{C_d}{H^2}\frac{\partial H}{\partial n} }_{\text{slope torque}} +
-\underbrace{ \frac{C_d}{VH}\frac{\partial V}{\partial n} }_{\text{speed torque}} -
-\underbrace{ \frac{C_d}{VH}\big[-\frac{\partial V}{\partial n} + VK \big]}_{\text{dissipation}} 
+\underbrace{\bigg[ \frac{1}{VH} \frac{\partial H}{\partial s}  \bigg]}_{\text{stretching}}\bigg[
+\underbrace{-\frac{\partial V}{\partial n}}_{\text{shear}} + 
+\underbrace{2VK}_{\text{curvature}} +
+\underbrace{f}_{\text{Coriolis}}\bigg]  \\
+-\underbrace{ \frac{C_d}{H^2}\frac{\partial H}{\partial n} }_{\text{slope torque}} +
+\underbrace{ \frac{2C_d}{VH}\frac{\partial V}{\partial n} }_{\text{speed torque}} -
+\underbrace{ \frac{C_d}{H}K }_{\text{dissipation}} 
 $$
 
-## Interpretation of terms
-- Shear divergence:
-- Curvature Divarication:
+### Interpretation of terms
+- Shear divergence: The tendency for streamlines to curve along the transition between different velocity profiles. For a momentum jet, this processes outwardly 
+deflects streamlines on its flanks.
+![](https://i.imgur.com/QPuqIbj.png)
+
+- Confluence veering: The interaction of diffluent/confluent streamlines with existing flow curvature further enhances/attenuates curvature in the same direction.
+![](https://i.imgur.com/mVmPRCF.png)
+
+
 - Beta effect:
-- Nonlinear stretching:
-- Slope Torque:
+Curvature acquired due to the streamwise variation of the Coriolis parameter. A streamline differentially affected by rotation along its path will naturally acquire curvature.
+![](https://i.imgur.com/Unhp0Tx.png)
+
+- Nonlinear stretching 
+
+    - Curvature: The tendency for cross-isobath flow with curvature to deflect
+![](https://i.imgur.com/nr674cF.png)
+
+    - Shear: Cross-isobath flow with shear will curve to conserve angular momentum via vortex stretching. In a momentum jet this manifests as outward lateral deflecting during it shoaling, and inward as it deepns.
+![](https://i.imgur.com/re2YmZI.png)
+
+
+    - Coriolis: Flow divergence due to topography implies a differential effect of the Coriolis force along streamlines inducing curvature. 
+![](https://i.imgur.com/4lvWvN4.png)
+
+- Slope Torque: In the presence of bottom drag, flow parallel to isobaths will curve shoreward due to depth-dependent bottom friction acting more strongly on the shallow side of the flow feature
+![](https://i.imgur.com/ooOz00A.png)
+
+
 - Speed torque:
+If there is a normal gradient in speed, the flow will experience a torque due to the differential forces on either side of the streamline inducing curvature
+![](https://i.imgur.com/HnnPpOJ.png)
+
 - Dissipation:
+Bottom friction will also act to reduce curvature present in the flow
+![](https://i.imgur.com/8aobi3V.png)
+
 
 ## 1D System
 We now elect to integrate equation (4) along the streamline defined by the local speed maxima along the jet's trajectory -an inflection point in the velocity profile where $\frac{\partial V}{\partial n} = 0$-consequently eliminating the terms involving velocity shear.Also considering the problem on an $\textit{f}$-plane ($\frac{\partial f}{\partial s} = 0$) gives
@@ -150,7 +191,7 @@ A series of numerical experiments were carried out to explore the dynamics of th
 - $\lambda = [0.01, 0.05, \mathbf{0.1}]$
 - $C_D = [0.0625, \mathbf{0.125}, 0.25]$
 
-For each case, the terms in equation (4) will be computed along the center streamline of the jet and leading order balances along its development identified
+For each case, the terms in equation (4) will be computed along the center streamline of the jet and the leading order balances along its trajectory identified
 
 
 
@@ -174,28 +215,31 @@ The depth-integrated equations of motion were solved numerically on this domain 
 
 ### Center streamline identification
 
-Because equation (4) is valid only along a streamline while the key simplification to arrive at (5) is $\frac{\partial V}{\partial n} = 0, V\frac{\partial \alpha}{\partial n} = 0$, the jet streamline minimizing the objective function
-$$J = \int_C \bigg[ |\frac{\partial V}{\partial n}| + |V\frac{\partial \alpha}{\partial n}| \bigg] \, ds $$ 
+Because equation (4) is valid only along a streamline while the key simplification to arrive at (5) is $\frac{1}{V}\frac{\partial V}{\partial n} = 0, \frac{\partial \alpha}{\partial n} = 0$, the jet streamline minimizing the objective function
+$$J = \frac{\int_C \big( |\frac{1}{V}\frac{\partial V}{\partial n}| + |\frac{\partial \alpha}{\partial n}| \big) \, ds}{\int_C \, ds} $$ 
 
- of interest. The optimal streamline was found using $\href{https://oceanparcels.org/}{\text{Ocean Parcels}}$ particle tracking package in conjunction with Scipy's <i>minimize_scalar</i> function, where the initial azimuthal location of the particle along $r_i$ was optimized. Lagrangian particles were integrated over a static velocity field i.e. the time-average over the final three hours of simulation, thus defining mean streamlines. 
+is of interest. The optimal streamline was found using $\href{https://oceanparcels.org/}{\text{Ocean Parcels}}$ particle tracking package in conjunction with Scipy's <i>minimize_scalar</i> function, where the initial azimuthal location of the particle along $r_i$ was optimized. Lagrangian particles were integrated over a static velocity field i.e. the time-average over the final three hours of simulation, thus defining mean streamlines. 
 
-## Results
+## Results 
 
-### Representative Case
+### The barotropic outflow
+section focused on describing problem and displaying fields
 
 - vorticity components figure (xy, s)
 ![](https://i.imgur.com/fczLlPI.png)
+validity of $\frac{\partial V}{\partial n} = 0$
 
 - divergence components figure (xy, s)
 ![](https://i.imgur.com/xTxr5YQ.png)
-
+validity of $V\frac{\partial \alpha}{\partial n} = 0$
 
 - momentum components figure (xy, s)?
 - curvature components figure (xy?, s)
 
 ![](https://i.imgur.com/OiA8Yps.png)
 
-### Parameter space
+### The effect of rotation, slope, and bottom friction on outflow dynamics
+An analysis focused section explaining how the role of terms across the parameter space influences the physics of the jet. Discuss utility/effectiveness of 1D model
 
 - Trajectories 
 ![](https://i.imgur.com/dg2gUKu.png)
@@ -204,6 +248,20 @@ Red is actual jet streamline and blue is 1D solution
 - curvature components $s$: ($\phi, \lambda, C_D$)
 ![](https://i.imgur.com/XiN3XBB.png)
 
-## Discussion
+## Summary
 
-## Conclusion
+## References
+
+## Appendix
+
+
+### Streamwise Normal Coordinate System
+
+\begin{aligned}
+\hat{s} = \frac{\vec{u}}{V} \\
+\hat{n} = k \times \hat{k} \\
+\alpha = \tan^{-1}\frac{\vec{v}}{\vec{u}} \\
+\frac{\partial \alpha}{\partial s} = K \\
+\nabla \cdot \vec{u} = \frac{\partial V}{\partial s} + V\frac{\partial \alpha}{\partial n} \\
+\nabla \times \vec{u} = -\frac{\partial V}{\partial n} + VK \\
+\end{aligned}
