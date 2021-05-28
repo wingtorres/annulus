@@ -22,6 +22,8 @@ hv.extension('bokeh')
 home = os.environ["HOME"]
 rc("text", usetex=False)
 
+#use setattr for witParticle and Sample
+
 class witParticle(JITParticle):
     s = Variable('s', dtype = np.float32, initial=0.)
     lon_lag = Variable("lon_lag", dtype = np.float32, to_write = False, initial = attrgetter("lon"))
@@ -55,9 +57,10 @@ class witParticle(JITParticle):
     curv_drag_diss = Variable("curv_drag_diss", dtype = np.float32, initial = attrgetter("curv_drag_diss"))
     curv_drag_sptq = Variable("curv_drag_sptq", dtype = np.float32, initial = attrgetter("curv_drag_sptq"))
     
-    curv_adv_stretch = Variable("curv_adv_stretch", dtype = np.float32, initial = attrgetter("curv_adv_stretch"))
-    curv_adv_sheardiv = Variable("curv_adv_sheardiv", dtype = np.float32, initial = attrgetter("curv_adv_diss"))
-    curv_adv_rotary = Variable("curv_adv_rotary", dtype = np.float32, initial = attrgetter("curv_adv_diss"))
+    curv_adv_sheardiv = Variable("curv_adv_sheardiv", dtype = np.float32, initial = attrgetter("curv_adv_sheardiv"))
+    curv_adv_veer = Variable("curv_adv_veer", dtype = np.float32, initial = attrgetter("curv_adv_veer"))
+    curv_adv_shear = Variable("curv_adv_shear", dtype = np.float32, initial = attrgetter("curv_adv_shear"))
+    curv_adv_curv = Variable("curv_adv_curv", dtype = np.float32, initial = attrgetter("curv_adv_curv"))
     
 def Sample(particle, fieldset, time):
     dx = particle.lon - particle.lon_lag
@@ -95,9 +98,10 @@ def Sample(particle, fieldset, time):
     particle.curv_drag_diss = fieldset.curv_drag_diss[time, particle.depth, particle.lat, particle.lon]
     particle.curv_drag_sptq = fieldset.curv_drag_sptq[time, particle.depth, particle.lat, particle.lon]
     
-    particle.curv_adv_stretch = fieldset.curv_adv_stretch[time, particle.depth, particle.lat, particle.lon]
+    particle.curv_adv_shear = fieldset.curv_adv_shear[time, particle.depth, particle.lat, particle.lon]
     particle.curv_adv_sheardiv = fieldset.curv_adv_sheardiv[time, particle.depth, particle.lat, particle.lon]
-    particle.curv_adv_rotary = fieldset.curv_adv_rotary[time, particle.depth, particle.lat, particle.lon]
+    particle.curv_adv_veer = fieldset.curv_adv_veer[time, particle.depth, particle.lat, particle.lon]
+    particle.curv_adv_curv = fieldset.curv_adv_curv[time, particle.depth, particle.lat, particle.lon]
     
     if particle.s >= 4e3:
         particle.state = 4
@@ -119,10 +123,10 @@ state_terms = ["alphabar", "v", "H_psi", "k", "ω", "dvdn", "dadn", "dkds", "dkd
 div_terms = ["divergence", "div_hadv"] #["div_topo", "div_rotary"]
 curv_terms = ["curv_hadv","curv_cor","curv_drag","curv_visc","curv_prsgrd","curv_rate","curv_total"]
 drag_terms = ["curv_drag_sltq","curv_drag_diss","curv_drag_sptq"]
-adv_terms = ["curv_adv_stretch", "curv_adv_sheardiv","curv_adv_rotary"]
+adv_terms = ["curv_adv_shear", "curv_adv_sheardiv","curv_adv_veer", "curv_adv_curv"]
 variables = state_terms + curv_terms + div_terms + drag_terms + adv_terms
 
-def interp2path(dm, theta, pathfile, r = 12.05e3):
+def interp2path(dm, theta, pathfile, r = 12.025e3):
     dm["v"] = dm.V
     dm["theta_opt"] = theta
     x0, y0 = r*np.cos(theta), r*np.sin(theta)
@@ -138,15 +142,16 @@ def interp2path(dm, theta, pathfile, r = 12.05e3):
     fieldset = FieldSet.from_xarray_dataset(dm, variables = velocities, dimensions = dimensions, mesh = mesh, time_periodic = False)
 
     for var in variables:
-        field = Field(name = var, data = dm[var].values, lon = x, lat = y, transpose = False, mesh = mesh, allow_time_extrapolation = True)
+        field = Field(name = var, data = dm[var].values, lon = x, lat = y, transpose = False, mesh = mesh, allow_time_extrapolation = True, interp_method = "linear")
         fieldset.add_field(field)
 
     pset = ParticleSet.from_list(fieldset = fieldset, pclass = witParticle, time = dm.ocean_time.values, lon = x0, lat = y0 )
-    output_file = pset.ParticleFile(name = pathfile, outputdt = delta(seconds = 300))
+    output_file = pset.ParticleFile(name = pathfile, outputdt = delta(seconds = 300), convert_at_end = True)
     kernels = AdvectionRK4 + pset.Kernel(Sample)
-    pset.execute(kernels, runtime = delta(hours = 120.0), dt = delta(seconds = 60), output_file = output_file, recovery = recovery)
-    print(pset)
+    pset.execute(kernels, runtime = delta(hours = 120.0), dt = delta(seconds = 30), output_file = output_file, recovery = recovery, verbose_progress = True)
+    display(pset)
     output_file.export()
+    #output_file.close()
     return
 
 def make_dataset(dp):
@@ -158,11 +163,12 @@ def make_dataset(dp):
     dp["V"] = dp.v
     dp["vk"] = dp.v*dp.k
     dp["dhds"] = dp.H.differentiate("obs")/dp.s.differentiate("obs")
+
     dp["alphabar"]*= (180/np.pi)
     dp["div_topo"] = -dp.v*dp.dhds/dp.H
     dp["div_rotary"] = -dp.v*dp.dadn
 
-    dp["alpha_path"] = np.arctan2(dp.lat.differentiate("obs"),dp.lon.differentiate("obs")) + np.pi/2
+    dp["theta_path"] = np.arctan2(dp.lat.differentiate("obs"),dp.lon.differentiate("obs")) #+ np.pi/2
     dp["dads_path"] = dp.alpha_path.differentiate("obs")/dp.s.differentiate("obs")
     dp["sheardiv"] = dp.dvdn.differentiate("obs")/dp.s.differentiate("obs")
     dp["dkds_path"] = dp.k.differentiate("obs")/dp.s.differentiate("obs")
