@@ -2,26 +2,14 @@ from numba import jit, njit
 import numpy as np
 import pandas as pd
 import xarray as xr
-#import pycoawst.tools.circulation as pcc
+from scipy.integrate import solve_ivp
 
 @njit
 def orient(theta,alpha):
     """heading angle"""
     #angle = (alpha - theta)
-    angle = ( (alpha-theta) + np.pi) % (2*np.pi) - np.pi     
+    angle = ( (alpha - theta) + np.pi) % (2*np.pi) - np.pi     
     return angle
-
-#https://stackoverflow.com/questions/25829364/applying-a-decorator-to-an-imported-function
-# nonlinear_topo = njit(pcc.nonlinear_topo)
-# nonlinear_spr = njit(pcc.nonlinear_spr)
-# coriolis_topo = njit(pcc.coriolis_topo)
-# coriolis_spr = njit(pcc.coriolis_spr)
-# slope_torque = njit(pcc.slope_torque)
-# dissipation = njit(pcc.dissipation) 
-
-@njit
-def spreading(k,dadn):
-    return k*dadn
 
 @njit
 def nonlinear_stretching(h,dhds,k):
@@ -36,6 +24,7 @@ def nonlinear_spreading(dadn,k):
 @njit
 def coriolis_stretching(h,dhds,f,u):
     """computation of coriolis term"""
+    return np.multiply(np.multiply(np.multiply(dhds,f),1/u),1/h)
     return dhds*f/(u*h)
 
 @njit
@@ -61,6 +50,14 @@ def stokes_divergence(h, dhds, Hs = 2.0, k = 2*np.pi/100, omega = 2*np.pi/10):
 
     return Hs**2*k/(2*omega*h**2)*dhds
 
+#https://stackoverflow.com/questions/25829364/applying-a-decorator-to-an-imported-function
+# nonlinear_topo = njit(pcc.nonlinear_topo)
+# nonlinear_spr = njit(pcc.nonlinear_spr)
+# coriolis_topo = njit(pcc.coriolis_topo)
+# coriolis_spr = njit(pcc.coriolis_spr)
+# slope_torque = njit(pcc.slope_torque)
+# dissipation = njit(pcc.dissipation) 
+
 @njit
 def curvature_evolution(s, Y, 𝛽 = 0.01, f = -1e-4, Cd = 2.5e-3, ri = 12e3, dadn = 0): 
     """system of ODEs"""
@@ -77,7 +74,7 @@ def curvature_evolution(s, Y, 𝛽 = 0.01, f = -1e-4, Cd = 2.5e-3, ri = 12e3, da
             slope_torque(Cd,dhdn,h) + 
             dissipation(Cd,k,h) 
             # + (2*k*u + f)*stokes_divergence(h, dhds)/u**2
-            )/5
+            )
 
     return [k, drds, (1/r)*drdn, dhds, -u*dhds/h, dkds]
 
@@ -93,7 +90,7 @@ def leavedomain(s,Y,𝛽,f,Cd,ri,dadn):
     return (-(Y[1] - 15e3  + 1))
 leavedomain.terminal = True
 
-class ODEsol():
+class curvatureIVP():
     """custom class to store parameters and solutions for ODE solutions w/ methods 
     to store the state variables and calculate diagnostics or other derived quantities
     """
@@ -158,3 +155,17 @@ class ODEsol():
         self.D = dp.to_dataframe() #pd.DataFrame.from_dict(self.D, dtype = np.float64())
         
         return self.D
+    
+    def ode_solve(self, y0, s0 = 0, sf = 4e3):
+        """
+        Solve initial value problem provided y0 using the parameters assigned to the class. 
+        Returns the diagnostic and state dataframes
+        """
+        sol = solve_ivp(curvature_evolution, t_span = [s0, sf], y0 = y0, args = (self.𝛽, self.f, self.Cd, self.ri, self.dadn), 
+                    method = "BDF", dense_output = True, events = [leavedomain])
+        s = np.linspace(s0, sol.t[-1], 1000).flatten()
+        dqs = self.state(sol, s)
+        dqm = self.diagnostics()
+
+        return dqs, dqm
+
