@@ -13,9 +13,10 @@ navpane = pn.pane.Markdown(navbar)
 def m2km(value):
     return f"{abs(value)/1e3:d} km"
 
-def border(ds):
-    x = ds.x_psi.values
-    y = ds.y_psi.values
+def border(ds,coord = "psi"):
+
+    x = ds[f"x_{coord}"].values
+    y = ds[f"y_{coord}"].values
     xo = np.concatenate([x[0,:-1], x[:-1,-1], x[-1,::-1], x[-2:0:-1,0]])
     yo = np.concatenate([y[0,:-1], y[:-1,-1], y[-1,::-1], y[-2:0:-1,0]])
     coords = np.vstack((xo,yo)).T
