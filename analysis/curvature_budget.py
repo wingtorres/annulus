@@ -1,4 +1,5 @@
 import os
+from inspect import getsource
 import math
 import numpy as np
 
@@ -11,57 +12,27 @@ from matplotlib import rc
 import cmocean
 from operator import attrgetter
 
-from parcels import AdvectionRK4, AdvectionRK45, ErrorCode, Variable, Field, FieldSet, JITParticle, ParticleFile, ParticleSet
+from parcels import AdvectionRK4, AdvectionRK45, ErrorCode, Variable, Field, FieldSet, JITParticle, ScipyParticle, ParticleFile, ParticleSet, kernel
 from datetime import timedelta as delta
-
-import pycoawst.tools.grid as pcg
-import pycoawst.tools.circulation as pcc
-import pycoawst.tools.momentum as pcm
 
 hv.extension('bokeh')
 home = os.environ["HOME"]
 rc("text", usetex=False)
 
-#use setattr for witParticle and Sample
+varlist = ["alphabar","k","H_psi","v","ω","dadn","dvdn","dkds","dkds_dia","divergence","div_hadv",
+           "curv_hadv","curv_cor","curv_drag","curv_visc","curv_prsgrd","curv_rate","curv_total",
+           "curv_drag_sltq","curv_drag_diss","curv_drag_sptq",
+           "curv_adv_sheardiv","curv_adv_veer","curv_adv_shear","curv_adv_curv"]
 
 class witParticle(JITParticle):
+
+    for v in varlist:
+        setattr(JITParticle, v, Variable(v, dtype = np.float32, initial = attrgetter(v)) )
+        
     s = Variable('s', dtype = np.float32, initial=0.)
     lon_lag = Variable("lon_lag", dtype = np.float32, to_write = False, initial = attrgetter("lon"))
     lat_lag = Variable("lat_lag", dtype = np.float32, to_write = False, initial = attrgetter("lat"))
 
-    alphabar = Variable('alphabar', dtype=np.float32, initial=attrgetter("alphabar"))
-    k = Variable('k', dtype=np.float32, initial=attrgetter("k"))
-    H = Variable('H', dtype=np.float32, initial=attrgetter("H"))
-    v = Variable('v', dtype=np.float32, initial=attrgetter("V"))
-    ω = Variable('ω', dtype=np.float32, initial=attrgetter("ω"))
-
-    dadn = Variable('dadn', dtype=np.float32, initial=attrgetter("dadn"))
-    dvdn = Variable('dvdn',  dtype=np.float32, initial=attrgetter("dvdn"))
-    dkds = Variable('dkds', dtype=np.float32, initial=attrgetter("dkds"))
-    dkds_dia = Variable('dkds_dia', dtype=np.float32, initial=attrgetter("dkds_dia"))
-    
-    divergence = Variable('divergence', dtype=np.float32, initial=attrgetter("divergence"))
-    div_hadv = Variable('div_hadv', dtype=np.float32, initial=attrgetter("div_hadv"))
-    #div_topo = Variable('div_topo', dtype=np.float32, initial=attrgetter("div_topo"))
-    #div_rotary = Variable('div_rotary', dtype=np.float32, initial=attrgetter("div_rotary"))
-    
-    curv_hadv = Variable("curv_hadv", dtype = np.float32, initial = attrgetter("curv_hadv"))
-    curv_cor = Variable("curv_cor", dtype = np.float32, initial = attrgetter("curv_cor"))
-    curv_drag = Variable("curv_drag", dtype = np.float32, initial = attrgetter("curv_drag"))
-    curv_visc = Variable("curv_visc", dtype = np.float32, initial = attrgetter("curv_visc"))
-    curv_prsgrd = Variable("curv_prsgrd", dtype = np.float32, initial = attrgetter("curv_prsgrd"))
-    curv_rate = Variable("curv_rate", dtype = np.float32, initial = attrgetter("curv_rate"))
-    curv_total = Variable("curv_total", dtype = np.float32, initial = attrgetter("curv_total"))
-    
-    curv_drag_sltq = Variable("curv_drag_sltq", dtype = np.float32, initial = attrgetter("curv_drag_sltq"))
-    curv_drag_diss = Variable("curv_drag_diss", dtype = np.float32, initial = attrgetter("curv_drag_diss"))
-    curv_drag_sptq = Variable("curv_drag_sptq", dtype = np.float32, initial = attrgetter("curv_drag_sptq"))
-    
-    curv_adv_sheardiv = Variable("curv_adv_sheardiv", dtype = np.float32, initial = attrgetter("curv_adv_sheardiv"))
-    curv_adv_veer = Variable("curv_adv_veer", dtype = np.float32, initial = attrgetter("curv_adv_veer"))
-    curv_adv_shear = Variable("curv_adv_shear", dtype = np.float32, initial = attrgetter("curv_adv_shear"))
-    curv_adv_curv = Variable("curv_adv_curv", dtype = np.float32, initial = attrgetter("curv_adv_curv"))
-    
 def Sample(particle, fieldset, time):
     dx = particle.lon - particle.lon_lag
     dy = particle.lat - particle.lat_lag
@@ -69,48 +40,23 @@ def Sample(particle, fieldset, time):
     particle.s += ds
     particle.lon_lag = particle.lon
     particle.lat_lag = particle.lat
-
-    particle.alphabar = fieldset.alphabar[time, particle.depth, particle.lat, particle.lon]
-    particle.H = fieldset.H_psi[time, particle.depth, particle.lat, particle.lon]
-    particle.k = fieldset.k[time, particle.depth, particle.lat, particle.lon]
-    particle.v = fieldset.v[time, particle.depth, particle.lat, particle.lon]
-    particle.ω = fieldset.ω[time, particle.depth, particle.lat, particle.lon]
-    particle.dvdn = fieldset.dvdn[time, particle.depth, particle.lat, particle.lon]
-    particle.dadn = fieldset.dadn[time, particle.depth, particle.lat, particle.lon]
-    #particle.dhds = fieldset.dhds[time, particle.depth, particle.lat, particle.lon]
-    particle.dkds = fieldset.dkds[time, particle.depth, particle.lat, particle.lon]
-    particle.dkds_dia = fieldset.dkds_dia[time, particle.depth, particle.lat, particle.lon]
-    
-    particle.divergence = fieldset.divergence[time, particle.depth, particle.lat, particle.lon]
-    particle.div_hadv = fieldset.div_hadv[time, particle.depth, particle.lat, particle.lon]
-    #particle.div_topo = fieldset.div_topo[time, particle.depth, particle.lat, particle.lon]
-    #particle.div_rotary = fieldset.div_rotary[time, particle.depth, particle.lat, particle.lon]
-    
-    particle.curv_hadv = fieldset.curv_hadv[time, particle.depth, particle.lat, particle.lon]
-    particle.curv_cor = fieldset.curv_cor[time, particle.depth, particle.lat, particle.lon]
-    particle.curv_drag = fieldset.curv_drag[time, particle.depth, particle.lat, particle.lon]
-    particle.curv_visc = fieldset.curv_visc[time, particle.depth, particle.lat, particle.lon]
-    particle.curv_prsgrd = fieldset.curv_prsgrd[time, particle.depth, particle.lat, particle.lon]
-    particle.curv_rate = fieldset.curv_rate[time, particle.depth, particle.lat, particle.lon]
-    particle.curv_total = fieldset.curv_total[time, particle.depth, particle.lat, particle.lon]
-    
-    particle.curv_drag_sltq = fieldset.curv_drag_sltq[time, particle.depth, particle.lat, particle.lon]
-    particle.curv_drag_diss = fieldset.curv_drag_diss[time, particle.depth, particle.lat, particle.lon]
-    particle.curv_drag_sptq = fieldset.curv_drag_sptq[time, particle.depth, particle.lat, particle.lon]
-    
-    particle.curv_adv_shear = fieldset.curv_adv_shear[time, particle.depth, particle.lat, particle.lon]
-    particle.curv_adv_sheardiv = fieldset.curv_adv_sheardiv[time, particle.depth, particle.lat, particle.lon]
-    particle.curv_adv_veer = fieldset.curv_adv_veer[time, particle.depth, particle.lat, particle.lon]
-    particle.curv_adv_curv = fieldset.curv_adv_curv[time, particle.depth, particle.lat, particle.lon]
-    
+            
     if particle.s >= 4e3:
-        particle.state = 4
-#       particle.state = 4
-#       print("Halting execution...")
+        particle.state = 44
+        print("Halting execution...")
 
-# def DeleteParticle(particle, fieldset, time):
-#     print("Deleting particle")
-#     particle.delete()
+#Append variable list to function, save to file, then re-import
+funccode = getsource(Sample)
+for v in varlist:
+    funccode += f'    particle.{v} = fieldset.{v}[time,particle.depth, particle.lat, particle.lon]\n'
+
+with open("kernel_sample.py", 'w') as f:
+    print(funccode, file = f)
+
+from kernel_sample import Sample as kernel_sample
+
+# print(funccode)
+# display(getsource(Sample)) #https://stackoverflow.com/questions/12072252/cant-get-source-code-for-a-method-declared-through-exec-using-inspect-in-pyth
 
 def DeleteParticle(particle, fieldset, time):
     particle.state = 4
@@ -147,35 +93,30 @@ def interp2path(dm, theta, pathfile, r = 12.025e3):
 
     pset = ParticleSet.from_list(fieldset = fieldset, pclass = witParticle, time = dm.ocean_time.values, lon = x0, lat = y0 )
     output_file = pset.ParticleFile(name = pathfile, outputdt = delta(seconds = 300), convert_at_end = True)
-    kernels = AdvectionRK4 + pset.Kernel(Sample)
+
+    kernels = AdvectionRK4 + pset.Kernel(kernel_sample)
     pset.execute(kernels, runtime = delta(hours = 120.0), dt = delta(seconds = 30), output_file = output_file, recovery = recovery, verbose_progress = True)
     display(pset)
     output_file.export()
     #output_file.close()
     return
 
-def make_dataset(dp):
-    #dp = pd.read_pickle(filename)
-    # dp["s"] = np.cumsum(np.hypot(np.gradient(dp.lon, axis = 1), np.gradient(dp.lat, axis = 1)))
-    #dp["s"] = np.cumsum(np.hypot(dp.lon.differentiate("obs"),dp.lat.differentiate("obs")))
-    #dp["V"] = dp.vk/dp.k
-    #dp["dhds"] = -dp.div_topo*dp.H/dp.V
-    dp["V"] = dp.v
-    dp["vk"] = dp.v*dp.k
-    dp["dhds"] = dp.H.differentiate("obs")/dp.s.differentiate("obs")
+# def make_dataset(dp):
 
-    dp["alphabar"]*= (180/np.pi)
-    dp["div_topo"] = -dp.v*dp.dhds/dp.H
-    dp["div_rotary"] = -dp.v*dp.dadn
+#     dp["V"] = dp.v
+#     dp["vk"] = dp.v*dp.k
+#     dp["dhds"] = dp.H.differentiate("obs")/dp.s.differentiate("obs")
 
-    dp["theta_path"] = np.arctan2(dp.lat.differentiate("obs"),dp.lon.differentiate("obs")) #+ np.pi/2
-    dp["dads_path"] = dp.alpha_path.differentiate("obs")/dp.s.differentiate("obs")
-    dp["sheardiv"] = dp.dvdn.differentiate("obs")/dp.s.differentiate("obs")
-    dp["dkds_path"] = dp.k.differentiate("obs")/dp.s.differentiate("obs")
+#     dp["alphabar"]*= (180/np.pi)
+#     dp["div_topo"] = -dp.v*dp.dhds/dp.H
+#     dp["div_rotary"] = -dp.v*dp.dadn
+
+#     dp["theta_path"] = np.arctan2(dp.lat.differentiate("obs"),dp.lon.differentiate("obs")) #+ np.pi/2
+#     dp["dads_path"] = dp.alphabar.differentiate("obs")/dp.s.differentiate("obs")
+#     dp["sheardiv"] = dp.dvdn.differentiate("obs")/dp.s.differentiate("obs")
+#     dp["dkds_path"] = dp.k.differentiate("obs")/dp.s.differentiate("obs")
     
-    #dp["curv_adv_compute"] = (-dp.dkds_path + dp.curv_adv_sheardiv + dp.curv_adv_stretch)
-    #dp["curv_drag_compute"] = (dp.curv_drag_sltq + dp.curv_drag_sptq + dp.curv_drag_diss)
-    return dp
+#     return dp
 
 def create_figures(df, dm):    
     #ps = df.hvplot.points(x = "lon", y = "lat", s = 1, color = "r")
@@ -186,9 +127,6 @@ def create_figures(df, dm):
 
     # plot_div =  
     
-
-    
-
     plot_dia = ( df.hvplot.line(x = "s", y = ["dkds","dkds_dia"],line_dash = ["solid","dashed"], color = ["k","k"], line_alpha = [1,1])*\
                  df.hvplot.line(x = "s", y = curv_terms, ylim = (-2e-6, 2e-6))).opts(title = "Curvature Evolution") 
     
